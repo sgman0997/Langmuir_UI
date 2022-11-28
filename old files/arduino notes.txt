@@ -1,0 +1,187 @@
+arduino notes
+
+
+
+****LED control
+void setup() {
+  Serial.begin(19200);
+  pinMode(LED_BUILTIN, OUTPUT);
+
+
+}
+
+void loop() {
+  Serial.write("Switching ON");
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  Serial.write("Switching OFF");
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
+  
+}
+
+
+
+*****serial comunication
+
+int val;
+
+void setup() {
+  Serial.begin(19200);
+}
+
+void loop() {
+  if (Serial.available() > 0){
+    val = Serial.read();
+    Serial.write("\n");
+    if(val==1){
+      Serial.write("ON\n");
+      }
+    if(val==0){
+      Serial.write("OFF\n");
+      }
+  }
+}
+
+
+
+
+
+int val;
+
+void setup() {
+  Serial.begin(19200);
+  Serial.flush();
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+void loop() {
+  if (Serial.available() > 0){
+    int val = char(Serial.read())-'0';
+      //Serial.write("tp1\n");
+    Serial.println(val);
+      //Serial.write("tp2\n");
+    Serial.write("\n");
+      //Serial.write("tp3\n");
+    if(val==1){
+      Serial.write("ON\n");
+      digitalWrite(LED_BUILTIN, HIGH);
+      //delay(1000);
+      }
+    if(val==0){
+      Serial.write("OFF\n");
+      digitalWrite(LED_BUILTIN, LOW);
+      //delay(1000);
+      }
+  }
+}
+
+
+
+
+
+
+int analogPin0 = A0;
+int analogPin1 = A1;
+int analogPin2 = A2;
+int analogPin3 = A3;
+//int analogPin4 = A4;
+//int analogPin5 = A5;
+int val0 = 0;  
+int val1 = 0;
+int val2 = 0;
+int val3 = 0;
+
+void setup() {
+  Serial.begin(19200);
+}
+
+void loop() {
+  Serial.write("pin A0  pin A1  pin A2  pin A3  pin A4  pin A5  ");
+  
+  val0 = analogRead(analogPin0);
+  Serial.write(val0);
+  Serial.write("  ");  
+  val1 = analogRead(analogPin1);
+  Serial.write(val1);
+  Serial.write("  ");
+  val2 = analogRead(analogPin2);
+  Serial.write(val2);
+  Serial.write("  ");
+  val3 = analogRead(analogPin3);
+  Serial.write(val3);
+  Serial.write("  ");
+  
+  Serial.println(" ");
+  delay(2000);
+}
+
+
+int analogPin0 = A0;
+int analogPin1 = A1;
+int analogPin2 = A2;
+int analogPin3 = A3;
+int analogPin4 = A4;
+int analogPin5 = A5;
+int analogPin6 = A6;
+int analogPin7 = A7;
+//int analogPin8 = A8;
+
+int val0 = 0;  
+int val1 = 0;
+int val2 = 0;
+int val3 = 0;
+int val4 = 0;  
+int val5 = 0;
+int val6 = 0;
+int val7 = 0;
+//int val8 = 0;
+
+void setup() {
+  Serial.begin(19200);
+}
+
+void loop() {
+  val0 = analogRead(analogPin0);
+  val1 = analogRead(analogPin1);
+  val2 = analogRead(analogPin2);
+  val3 = analogRead(analogPin3);
+  val4 = analogRead(analogPin4);
+  val5 = analogRead(analogPin5);
+  val6 = analogRead(analogPin6);
+  val7 = analogRead(analogPin7);
+  //val8 = analogRead(analogPin8);
+  
+  Serial.write("pin A0: ");
+  Serial.println(val0);
+   
+  Serial.write("pin A1: ");
+  Serial.println(val1);
+  
+  Serial.write("pin A2: ");
+  Serial.println(val2);
+  
+  Serial.write("pin A3: ");
+  Serial.println(val3);
+
+  Serial.write("pin A4: ");
+  Serial.println(val4);
+   
+  Serial.write("pin A5: ");
+  Serial.println(val5);
+  
+  Serial.write("pin A6: ");
+  Serial.println(val6);
+  
+  Serial.write("pin A7: ");
+  Serial.println(val7);
+
+  //Serial.write("pin A8: ");
+  //Serial.println(val8);
+  
+  Serial.println(" ");
+  delay(2000);
+}
+
+
+
