@@ -29,12 +29,14 @@ import matplotlib.animation as animation
 import matplotlib.dates as mdates
 import numpy as np
 import csv
+import scipy
 from datetime import datetime
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import *
 from tkinter.simpledialog import askstring
 from tkinter.messagebox import showinfo
 from lang_config import *
+from scipy import stats  # verify
 #from linear_regression import linear_regression
 
 ###############################################################################
@@ -68,9 +70,9 @@ barrier_closed = 2000                # barrier pos at fully closed, fully open =
 animation_interval = 200 # Time (ms) between animation updates, impacts sample normal rate, but not run sample rate
 
 # calibration and tare variables
-slope = -0.000013472804156538819   # linear fit slope for scaling raw balance values, updated in Calibration
+slope = -1.4301602559451846e-05   # linear fit slope for scaling raw balance values, updated in Calibration
 intercept = 0                      # linear fit intercept for shifting raw balance values, updated in Calibration
-slope2 = -0.000013472804156538819  # 2nd balance not calibrated, balance value for qualitative comparison only
+slope2 = slope                     # 2nd balance not calibrated, balance value for qualitative comparison only
 intercept2 = 0                     # 2nd balance not calibrated, balance value for qualitative comparison only
 tare_offset1 = 0                   # value by which to shift raw arduino value (hx711) read from dev/ttyACM0
 tare_offset2 = 0                   # 2nd balance tare offset
@@ -257,7 +259,7 @@ def Sample():
     
     sr1, sr2, sdt = Raw()  # raw sample data unmodified by tare offset or linear fit value
     # force value (mN) = (raw sensor value - tare offset) * slope + intercept
-    force_value = (sr1 - tare_offset1) * slope + intercept  # slope scales value to mN, intercept included so linear region more accurate
+    force_value = (sr1 - tare_offset1) * slope  # + intercept  # slope scales value to mN, intercept included so linear region more accurate
     # surface tension and surface pressure values should remain in mN/m to be consistant with literature
     # surface tension should be 72.75 (at 20C) when plate immersed, tared, and no lipid present
     force_per_meter = force_value/(p_perimeter*0.001)  # perimeter converted to m to keep mN/m consistancy
@@ -266,7 +268,7 @@ def Sample():
     surface_pressure = -force_per_meter  # Eq. 7 from Scott Gere thesis paper
     
     # tension and pressure values for balance #2 are given as if balance 2 were used, though it is not
-    force_value2 = (sr2 - tare_offset2) * slope2 + intercept  #  not valid unless scale 2 has been callibrated
+    force_value2 = (sr2 - tare_offset2) * slope2 #+ intercept  #  not valid unless scale 2 has been callibrated
     # not necessary since balance 2 is not used to suspend a plate
     #force_per_meter2 = force_value2/(p_perimeter*0.001)
     #surface_tension2 = pure_water_tension + force_per_meter2
@@ -316,7 +318,7 @@ def Tare():
     
     tare_offset1 = np.average(tare_data1)
     tare_offset2 = np.average(tare_data2)
-    print(tare_offset1, tare_offset2)
+    print("raw balance values tared at: ", tare_offset1, tare_offset2)
     # clear data sets after offset value obtained
     pressure_data = []
     tension_data = []
@@ -372,15 +374,19 @@ def Calibrate_balance():
     #print(cal_vals_x)
     #print(cal_vals_y)
     # generate line function
-    slope_intercept = np.polyfit(cal_vals_x, cal_vals_y, 1)  # fit based on mN
+    slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(cal_vals_x, cal_vals_y)
+    r_squared = r_value**2
+    #slope_intercept = np.polyfit(cal_vals_x, cal_vals_y, 1)  # fit based on mN
     #slope, intercept = linear_regression(cal_vals_x, cal_vals_y, proportional=True)
-    slope = float(slope_intercept[0])  # scales sensor value to force (mN)
-    intercept = float(slope_intercept[1])  # shifts sensor value to force (mN) intercept
+    #slope = float(slope_intercept[0])  # scales sensor value to force (mN)
+    #intercept = float(slope_intercept[1])  # shifts sensor value to force (mN) intercept
     message  = "slope: " + repr(slope) + " intercept: " + repr(intercept)
+    params = [["slope: ", repr(slope)], ["intercept: ", repr(intercept)],
+              ["r_value: ", r_value], ["r_squared: ", r_squared], ["p_value: ", p_value], ["std_err: ", std_err],
+              ["cal_num: ", cal_num], ["cal_time: ", cal_time]]
     showinfo("slope and intercept", message)
-    print(slope_intercept)
-    #print(slope, intercept)
-    Save_data(cal_vals, ['scale values', 'force values'], 'last_balance_cal.txt', slope_intercept)
+    print(slope, intercept, r_value, p_value, std_err, r_squared)
+    Save_data(cal_vals, ['scale values', 'force values'], 'last_balance_cal.txt', params)
 
 
 def Contam_check():
@@ -510,10 +516,12 @@ def Get_file_name():
     file_name = askstring("File name input", "input file name and extension")
     return file_name
 
+
 # save data to csv file
 def Save_data(sample_data=sample_data, sample_fields=sample_fields, f_name=False, iso_params=False):
     if not f_name:
         f_name = Get_file_name()  # choose file to dump to, prevents unintentional overwrite
+    f_name = "Data_files/" + f_name
     with open(f_name, 'w') as file:
         write = csv.writer(file)
         if iso_params:

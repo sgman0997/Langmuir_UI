@@ -17,9 +17,10 @@ max_elements = 2000    # Maximum number of elements to display in plot, prevents
 max_data = 50000       # max number of elements to store in any data set, prevents overflow and large data set accumulation
 
 # wilhelmy plate values
+# realistically- only the width needs to be updated as mass, length, and imersion_depth are unused, and thickness does not change much
 p_mass = 34.4  # mg, was kg 
-p_length = 29.01  # mm, was m
-p_width = 14.5  # mm, was m
+p_length = 22.21  # mm, was m
+p_width = 12.83  # mm, was m
 p_thickness = 0.00018 # mm, was m
 imersion_depth = 1 # mm, was m
 contact_angle = 0 # degrees
