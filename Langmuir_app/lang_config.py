@@ -19,8 +19,8 @@ max_data = 50000       # max number of elements to store in any data set, preven
 # wilhelmy plate values
 # realistically- only the width needs to be updated as mass, length, and imersion_depth are unused, and thickness does not change much
 p_mass = 34.4  # mg, was kg 
-p_length = 22.21  # mm, was m
-p_width = 12.83  # mm, was m
+p_length = 20.00  # mm, was m
+p_width = 12.54  # mm, was m
 p_thickness = 0.00018 # mm, was m
 imersion_depth = 1 # mm, was m
 contact_angle = 0 # degrees

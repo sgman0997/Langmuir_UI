@@ -70,7 +70,7 @@ barrier_closed = 2000                # barrier pos at fully closed, fully open =
 animation_interval = 200 # Time (ms) between animation updates, impacts sample normal rate, but not run sample rate
 
 # calibration and tare variables
-slope = -1.4301602559451846e-05   # linear fit slope for scaling raw balance values, updated in Calibration
+slope = -1.4301602559451846e-05    # linear fit slope for scaling raw balance values, updated in Calibration
 intercept = 0                      # linear fit intercept for shifting raw balance values, updated in Calibration
 slope2 = slope                     # 2nd balance not calibrated, balance value for qualitative comparison only
 intercept2 = 0                     # 2nd balance not calibrated, balance value for qualitative comparison only
@@ -463,7 +463,7 @@ def Run():
     except TypeError:
         moles_in =  molecules # else default molecules
     try:
-        smoothing = int(askstring("Run values, cancel for default", "Input sample smoothing size. 10 is normal"))
+        smoothing = int(askstring("Run values, cancel for default", "Input sample smoothing size. 1 is normal"))
     except TypeError:
         smoothing = mave  # else default mave
     try:
@@ -584,7 +584,7 @@ def Calibrate_trough():
     print(barrier_pos, trough_closed_ang, trough_open_ang, area_per_step, working_area_ang)
     Open_full()  # open barrier after trough cal to prepare for tests
     current_area_ang = trough_open_ang  # set current area angstoms based on open position
-    print(current_area_ang)
+    print(current_area_ang, trough_len_min, trough_len_max)
     #TODO
     #Save_data(cal_vals, ['scale values', 'force values'], 'last_trough_cal.txt', slope_intercept)
     
