@@ -56,13 +56,13 @@ GPIO.setup(coil_A_2_pin, GPIO.OUT)
 GPIO.setup(coil_B_1_pin, GPIO.OUT)
 GPIO.setup(coil_B_2_pin, GPIO.OUT)
 # trough variables, square angstroms used for lit consistency
-# many of these values are default estimates. 
-area_per_step = 700000000000000.0    # will be area change for each step of barrier motor, Ang^2
+# many of these values are default estimates.  barrier_pos, trough_closed_ang, trough_open_ang, area_per_step, working_area_ang
+area_per_step = 689936400000000.1    # will be area change for each step of barrier motor, Ang^2
 barrier_pos = 0                      # will be position of barrier in stepper motor steps, expected to start open at 0
 area_per_mol = 100                   # will be calculated based on moles deposited and trough area, Ang^2
-trough_closed_ang = 3.36e+17         # ang^2, surface area when trough fully closed
-trough_open_ang = 1.5785e+18         # ang^2, surface area when trough fully open
-current_area_ang = 1.5785e+18        # ang^2, activly updated value representing current trough surface area
+trough_closed_ang = 1.9364076000000003e+17         # ang^2, surface area when trough fully closed
+trough_open_ang = 1.5735135600000003e+18         # ang^2, surface area when trough fully open
+current_area_ang = 1.5735135600000003e+18        # ang^2, activly updated value representing current trough surface area
 barrier_closed = 2000                # barrier pos at fully closed, fully open = 0
 ##############################################################
 
@@ -454,20 +454,22 @@ def Run():
     global mave  # set in config
     sample_num = barrier_closed - barrier_pos  # number of step/sample actions to take, default = remaining steps to close
     
+    # removed, rate not currently used, increase smoothing to slow down isotherm
+    #try:
+    #    area_rate = float(askstring("Run values, cancel for default", "Input desired sample rate (Ang^2/Molecule/min), 10 is normal."))
+    #except TypeError:
+    #    area_rate = compression_rate # else default compression_rate
     try:
-        area_rate = float(askstring("Run values, cancel for default", "Input desired sample rate (Ang^2/Molecule/min), 10 is normal."))
+        moles_in = float(askstring("Run values, cancel for default", "Input Moles of lipid deposited."))
+        molecules = moles_in * 6.02214E23
     except TypeError:
-        area_rate = compression_rate # else default compression_rate
+        moles_in =  "default value" # else default molecules
     try:
-        moles_in = float(askstring("Run values, cancel for default", "Input Moles of lipid deposited.")) * 6.02214E23
-    except TypeError:
-        moles_in =  molecules # else default molecules
-    try:
-        smoothing = int(askstring("Run values, cancel for default", "Input sample smoothing size. 1 is normal"))
+        smoothing = int(askstring("Run values, cancel for default", "Input sample smoothing size. 4 is normal"))
     except TypeError:
         smoothing = mave  # else default mave
     try:
-        sample_steps = int(askstring("Run values, cancel for default", "Input barrier steps. Do not exceed max steps set during calibration."))
+        sample_steps = int(askstring("Run values, cancel for default", "Input barrier steps. negative values will give expansion isotherm"))
     except TypeError:
         sample_steps = sample_num # else default sample_num
     """
@@ -481,8 +483,8 @@ def Run():
     to perform experiments at faster sampling rates.
     """
     area_change_expected = sample_steps * area_per_step
-    t_seconds  = ((area_change_expected / area_rate) / moles_in) * 60
-    sec_per_step = t_seconds / sample_steps
+    #t_seconds  = ((area_change_expected / compression_rate) / molecules) * 60
+    #sec_per_step = t_seconds / sample_steps
     #delay = sec_per_step
     delay = 0.001
     #print(area_change_expected, t_seconds, sec_per_step)
@@ -491,21 +493,47 @@ def Run():
     # initial sample to initialize variables
     force_value, surface_tension, surface_pressure, sdt = Sample()
     sample_start = mdates.num2date(sdt)
-    for i in range(sample_steps):  # number of step/sample actions to take
-        Close_trough(delay, 1)  # single barrier step
-        sample_data = []  # fresh data set for mave
-        for i in range(smoothing):  # samples taken for mave
-            force_value, surface_tension, surface_pressure, sdt = Sample()
-            sample_data.append(surface_pressure)
-            print("tp2", smoothing, i, surface_pressure, barrier_pos, sdt)
-        press_val = np.average(sample_data)  # next ave pressure value for data point
-        iso_data.append([area_per_mol, press_val])
-        print("tp3", area_per_mol, press_val, barrier_pos, sample_steps, smoothing, moles_in, molecules, area_rate, compression_rate)
-        iso_data_long.append([barrier_pos, area_per_mol, press_val, surface_pressure, surface_tension, sdt])
+    iso_type = ""
+    if sample_steps > 0:
+        iso_type = "Compression"
+        # make sure steps dont exceed available range
+        avail_range = barrier_closed - barrier_pos
+        if sample_steps > (avail_range):
+            sample_steps = avail_range
+        for i in range(sample_steps):  # number of step/sample actions to take
+            Close_trough(delay, 1)  # single barrier step
+            sample_data = []  # fresh data set for mave
+            for j in range(smoothing):  # samples taken for mave
+                force_value, surface_tension, surface_pressure, sdt = Sample()
+                sample_data.append(surface_pressure)
+                #print("tp2", smoothing, i, surface_pressure, barrier_pos, sdt)
+            press_val = np.average(sample_data)  # next ave pressure value for data point
+            iso_data.append([area_per_mol, press_val])
+            print("compression values: ", i, area_per_mol, press_val, barrier_pos, sample_steps, smoothing, moles_in, molecules, compression_rate)
+            iso_data_long.append([barrier_pos, area_per_mol, press_val, surface_pressure, surface_tension, sdt])
+    else:
+        iso_type = "Expansion"
+        # make sure steps dont exceed available range
+        if abs(sample_steps) > (barrier_pos):
+            sample_steps = -barrier_pos
+        for i in range(abs(sample_steps)):  # number of step/sample actions to take
+            Open_trough(delay, 1)  # single barrier step
+            sample_data = []  # fresh data set for mave
+            for j in range(smoothing):  # samples taken for mave
+                force_value, surface_tension, surface_pressure, sdt = Sample()
+                sample_data.append(surface_pressure)
+                #print("tp2", smoothing, i, surface_pressure, barrier_pos, sdt)
+            press_val = np.average(sample_data)  # next ave pressure value for data point
+            iso_data.append([area_per_mol, press_val])
+            print("expansion values: ", i, area_per_mol, press_val, barrier_pos, sample_steps, smoothing, moles_in, molecules, compression_rate)
+            iso_data_long.append([barrier_pos, area_per_mol, press_val, surface_pressure, surface_tension, sdt])
+
     sample_end = mdates.num2date(sdt)
     iso_params = [["start time: ", sample_start], ["end time: ", sample_end], ["number of smooting values: ", smoothing],
                   ["total sample steps: ", sample_steps], ["stepper delay: ", delay],
-                  ["area_change_expected: ", area_change_expected], ["molecules deposited: ", molecules]] 
+                  ["area_change_expected: ", area_change_expected], ["molecules deposited: ", molecules],
+                  ["plate perimeter: ", p_perimeter], ["plate width: ", p_width],
+                  ["isotherm type: ", iso_type]] 
     f_name = "Isotherm_" + str(sdt) + ".txt"
     Save_data(iso_data, ['area_per_molecule (Ang^2/molecule)', 'surface pressure (mN/m)'], f_name, iso_params)
     Save_data(iso_data_long, ['barrier_pos', 'area_per_mol',
@@ -570,6 +598,9 @@ def Calibrate_trough():
         
     trough_len_max = float(askstring("Calibrate Trough",
                          "Input length of open trough in mm"))
+    cal_steps = int(askstring("Calibrate Trough",
+                         "Input steps to open by, 2000 is normal"))
+    Close_trough(0.001, cal_steps)
     trough_len_min = float(askstring("Calibrate Trough",
                          "Input length of closed trough in mm"))
     barrier_dist = trough_len_max - trough_len_min

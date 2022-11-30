@@ -33,10 +33,10 @@ grav_acc = 9806.65 # mm/s^2
 
 
 # trough properties, also set in trough calibration
-trough_len_min = 40  # mm
-trough_len_max = 220  # mm
-trough_wid = 70  # mm
-molecules = 1.23E16  # molucules deposited
+trough_len_min = 27.87  # mm
+trough_len_max = 226.47  # mm
+trough_wid = 69.48  # mm
+molecules = 7.014E15  # molucules deposited
 
 # calculated and constant properties
 p_density = (p_mass/(p_length*p_width*p_thickness))
