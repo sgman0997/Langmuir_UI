@@ -13,7 +13,7 @@ force value on balance converted to mN
 """
 
 # data set values
-max_elements = 2000    # Maximum number of elements to display in plot, prevents excessive window refresh time
+max_elements = 1500    # Maximum number of elements to display in plot, prevents excessive window refresh time
 max_data = 50000       # max number of elements to store in any data set, prevents overflow and large data set accumulation
 
 # wilhelmy plate values
@@ -33,10 +33,10 @@ grav_acc = 9806.65 # mm/s^2
 
 
 # trough properties, also set in trough calibration
-trough_len_min = 27.87  # mm
-trough_len_max = 226.47  # mm
-trough_wid = 69.48  # mm
-molecules = 7.014E15  # molucules deposited
+trough_len_min = 74.00  # mm
+trough_len_max = 217.74  # mm
+trough_wid = 69.5  # mm
+molecules = 1.3247E16  # molucules deposited
 
 # calculated and constant properties
 p_density = (p_mass/(p_length*p_width*p_thickness))
@@ -52,7 +52,7 @@ cal_num = 10           # number of input values needed to complete calibration
 cal_time = 3           # seconds for scale to equalize before value is taken for calibration
 mave = 20              # moving aveerage window
 tare_num = 100         # number of samples to average when taring
-compression_rate = 100  # Ang^2/molecule/minute
+compression_rate = 10  # Ang^2/molecule/minute
 
 
 

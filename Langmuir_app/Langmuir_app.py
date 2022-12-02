@@ -57,13 +57,13 @@ GPIO.setup(coil_B_1_pin, GPIO.OUT)
 GPIO.setup(coil_B_2_pin, GPIO.OUT)
 # trough variables, square angstroms used for lit consistency
 # many of these values are default estimates.  barrier_pos, trough_closed_ang, trough_open_ang, area_per_step, working_area_ang
-area_per_step = 689936400000000.1    # will be area change for each step of barrier motor, Ang^2
+area_per_step = 665995333333333.4    # will be area change for each step of barrier motor, Ang^2
 barrier_pos = 0                      # will be position of barrier in stepper motor steps, expected to start open at 0
-area_per_mol = 100                   # will be calculated based on moles deposited and trough area, Ang^2
-trough_closed_ang = 1.9364076000000003e+17         # ang^2, surface area when trough fully closed
-trough_open_ang = 1.5735135600000003e+18         # ang^2, surface area when trough fully open
-current_area_ang = 1.5735135600000003e+18        # ang^2, activly updated value representing current trough surface area
-barrier_closed = 2000                # barrier pos at fully closed, fully open = 0
+area_per_mol = 228                   # will be calculated based on moles deposited and trough area, Ang^2
+trough_closed_ang = 5.143e+17         # ang^2, surface area when trough fully closed
+trough_open_ang = 1.513293e+18        # ang^2, surface area when trough fully open
+current_area_ang = 1.513293e+18        # ang^2, activly updated value representing current trough surface area
+barrier_closed = 1500                # barrier pos at fully closed, fully open = 0
 ##############################################################
 
 # animation and balance parameters
@@ -386,7 +386,7 @@ def Calibrate_balance():
               ["cal_num: ", cal_num], ["cal_time: ", cal_time]]
     showinfo("slope and intercept", message)
     print(slope, intercept, r_value, p_value, std_err, r_squared)
-    Save_data(cal_vals, ['scale values', 'force values'], 'last_balance_cal.txt', params)
+    Save_data(cal_vals, ['scale values', 'force values'], 'last_balance_cal.csv', params)
 
 
 def Contam_check():
@@ -461,7 +461,7 @@ def Run():
     #    area_rate = compression_rate # else default compression_rate
     try:
         moles_in = float(askstring("Run values, cancel for default", "Input Moles of lipid deposited."))
-        molecules = moles_in * 6.02214E23
+        molecules = moles_in * 6.02214E23  # amends default val for current session
     except TypeError:
         moles_in =  "default value" # else default molecules
     try:
@@ -486,7 +486,7 @@ def Run():
     #t_seconds  = ((area_change_expected / compression_rate) / molecules) * 60
     #sec_per_step = t_seconds / sample_steps
     #delay = sec_per_step
-    delay = 0.001
+    delay = 0.005
     #print(area_change_expected, t_seconds, sec_per_step)
     iso_data = []  # isotherm data callection to be saved in csv
     iso_data_long = []
@@ -532,12 +532,13 @@ def Run():
     iso_params = [["start time: ", sample_start], ["end time: ", sample_end], ["number of smooting values: ", smoothing],
                   ["total sample steps: ", sample_steps], ["stepper delay: ", delay],
                   ["area_change_expected: ", area_change_expected], ["molecules deposited: ", molecules],
-                  ["plate perimeter: ", p_perimeter], ["plate width: ", p_width],
-                  ["isotherm type: ", iso_type]] 
-    f_name = "Isotherm_" + str(sdt) + ".txt"
+                  ["moles in: ", moles_in], ["plate perimeter: ", p_perimeter], ["plate width: ", p_width],
+                  ["isotherm type: ", iso_type], ["area_per_mol: ", area_per_mol], ["area_per_step: ", area_per_step],
+                  ["trough_open_ang: ", trough_open_ang], ["barrier_pos: ", barrier_pos], ["barrier_closed: ", barrier_closed]]
+    f_name = "Isotherm_" + str(sdt) + ".csv"
     Save_data(iso_data, ['area_per_molecule (Ang^2/molecule)', 'surface pressure (mN/m)'], f_name, iso_params)
     Save_data(iso_data_long, ['barrier_pos', 'area_per_mol',
-                              'press_val', 'surface_pressure', 'surface_tension', 'sdt'], "run_backup.txt", iso_params)
+                              'press_val', 'surface_pressure', 'surface_tension', 'sdt'], "run_backup.csv", iso_params)
     
 
 def Get_file_name():
@@ -599,8 +600,8 @@ def Calibrate_trough():
     trough_len_max = float(askstring("Calibrate Trough",
                          "Input length of open trough in mm"))
     cal_steps = int(askstring("Calibrate Trough",
-                         "Input steps to open by, 2000 is normal"))
-    Close_trough(0.001, cal_steps)
+                         "Input steps to open by, 1500 is normal"))
+    Close_trough(0.005, cal_steps)
     trough_len_min = float(askstring("Calibrate Trough",
                          "Input length of closed trough in mm"))
     barrier_dist = trough_len_max - trough_len_min
@@ -612,12 +613,14 @@ def Calibrate_trough():
     trough_closed_ang = trough_area_closed * 1E14  # ang^2
     working_area_ang = trough_open_ang - trough_closed_ang
     area_per_step = working_area_ang/barrier_pos  # ang^2/step
-    print(barrier_pos, trough_closed_ang, trough_open_ang, area_per_step, working_area_ang)
+    print("barrier_pos: ", barrier_pos, " trough_closed_ang: ", trough_closed_ang,  " trough_open_ang: ", trough_open_ang,
+          " area_per_step: ", area_per_step,  " working_area_ang: ", working_area_ang)
     Open_full()  # open barrier after trough cal to prepare for tests
     current_area_ang = trough_open_ang  # set current area angstoms based on open position
-    print(current_area_ang, trough_len_min, trough_len_max)
+    print("current_area_ang: ", current_area_ang, " trough_len_min: ", trough_len_min, " trough_len_max: ", trough_len_max)
+    print("it is a good idea to update the defaults at the top of this file to reflect these values")
     #TODO
-    #Save_data(cal_vals, ['scale values', 'force values'], 'last_trough_cal.txt', slope_intercept)
+    #Save_data(cal_vals, ['scale values', 'force values'], 'last_trough_cal.csv', slope_intercept)
     
 
 """
@@ -661,24 +664,24 @@ def Close_trough(delay=0.01, steps=10):
             time.sleep(delay)
 
 # called by tk buttons, there is probably a better way to do this
-def Close_trough2(delay=0.001):
+def Close_trough2(delay=0.005):
     steps = int(askstring("Close steps",
                          "Input number of steps to close by"))
     Close_trough(delay, steps)
     
     
-def Open_trough2(delay=0.001):
+def Open_trough2(delay=0.005):
     steps = int(askstring("Open steps",
                          "Input number of steps to open by"))
     Open_trough(delay, steps)
     
-def Close_full(delay=0.001):
+def Close_full(delay=0.005):
     global barrier_pos  # current barrier pos in steps
     global barrier_closed  # fully closed barrier pos, max steps
     steps = barrier_closed - barrier_pos  # remaining steps needed to close
     Close_trough(delay, steps)
     
-def Open_full(delay=0.001):
+def Open_full(delay=0.005):
     global barrier_pos
     steps = barrier_pos
     Open_trough(delay, steps)  # fully open = 0, current pos = remain steps needed to open
