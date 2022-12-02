@@ -37,6 +37,7 @@ trough_len_min = 74.00  # mm
 trough_len_max = 217.74  # mm
 trough_wid = 69.5  # mm
 molecules = 1.3247E16  # molucules deposited
+# moles = 2.1998E-8      # kept for record purposes
 
 # calculated and constant properties
 p_density = (p_mass/(p_length*p_width*p_thickness))
